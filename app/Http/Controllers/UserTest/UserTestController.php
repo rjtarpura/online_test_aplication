@@ -34,6 +34,10 @@ class UserTestController extends Controller
      */
     public function index(UserTestRequest $request)
     {
+        if (!$this->repository->stopActiveTest()) {
+            return redirect()->route("home")->withError("Unable to stop active test. Please try again.");
+        }
+
         return view('user-test.index');
     }
 
@@ -89,7 +93,7 @@ class UserTestController extends Controller
      */
     public function start(UserTestStartRequest $request)
     {
-        if($this->repository->start()) {
+        if ($this->repository->start()) {
             return response()->json([
                 'status' => true,
             ]);

@@ -23,6 +23,7 @@ class UserTest extends Model
         'total_correct_questions',
         'total_incorrect_questions',
         'is_passed',
+        'is_auto_stop',
     ];
 
     /**
@@ -39,6 +40,14 @@ class UserTest extends Model
     public function scopeInActive($query)
     {
         return $query->whereNotNull('user_tests.end_at');
+    }
+
+    /**
+     * Scope to filter canceled test
+     */
+    public function scopeCompleted($query)
+    {
+        return $query->where('user_tests.is_auto_stop', 0);
     }
 
     public function userTestSheets()

@@ -30,18 +30,6 @@
     </div>
 </div>
 @else
-@if(Auth::user()->activeTest)
-<div class="alert alert-warning">
-    <strong>Heads up!</strong>
-
-    You have not completed your test. You can resume now!!
-    <br>
-    <br>
-    <p>
-        <a href="{{ route('user-tests.index') }}" class="btn btn-sm btn-warning">Resume Test</a>
-    </p>
-</div>
-@else
 <div class="alert alert-info">
     <strong>Heads up!</strong>
 
@@ -52,7 +40,6 @@
         <a href="{{ route('user-tests.index') }}" class="btn btn-sm btn-info">Start Test</a>
     </p>
 </div>
-@endif
 
 <div class="row">
     <div class="col-xs-12">
@@ -104,7 +91,7 @@
 
                         <p class="text-right">
                             <span class="label label-sm label-inverse arrowed-in">Correct Choice: {{$testSheet->question->correct_answer}}</span>
-                            <span class="label label-sm @if($testSheet->is_correct) label-success @else label-warning @endif">Your Choice: {{$testSheet->answer_option}}</span>
+                            <span class="label label-sm @if($testSheet->is_correct) label-success @else label-warning @endif">Your Choice: @if($testSheet->answer_option) {{$testSheet->answer_option}} @else Auto Submit @endif</span>
                         </p>
                         <hr />
                         @endforeach

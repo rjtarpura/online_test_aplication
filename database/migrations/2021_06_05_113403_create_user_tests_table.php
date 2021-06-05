@@ -21,6 +21,7 @@ class CreateUserTestsTable extends Migration
             $table->integer('total_correct_questions')->nullable();
             $table->integer('total_incorrect_questions')->nullable();
             $table->boolean('is_passed')->nullable();
+            $table->boolean('is_auto_stop')->nullable();
             $table->timestamps();
             $table->softDeletes();
 

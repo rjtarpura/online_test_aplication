@@ -32,7 +32,10 @@
     $(document).ready(function() {
         const $dataContainer = $("#data-container"),
             answerUrl = "{{ route('user-tests.answer', ['userTest' => ':id']) }}",
-            testStartUrl = "{{ route('user-tests.start') }}";
+            testStartUrl = "{{ route('user-tests.start') }}",
+            timerInterval = parseInt("{{ config('app.question_timer_seconds', 120) }}");
+
+        let timer = null;
 
         // Add a request interceptor
         axios.interceptors.request.use(function(config) {
@@ -47,7 +50,7 @@
         // Fetch initial data
         loadDate();
 
-        $dataContainer.on('click', '.save-and-next', function(e) {
+        $dataContainer.on('click', '.save-and-next', function(e, autoTrigger) {
 
             e.preventDefault();
 
@@ -64,12 +67,16 @@
                 return false;
             }
 
-            if (typeof answer_option === 'undefined') {
+            if (typeof autoTrigger === 'undefined' && typeof answer_option === 'undefined') {
                 swal({
                     icon: "warning",
                     title: "Please choose an option!",
                 });
                 return false;
+            }
+
+            if (typeof userTestId !== 'undefined' && userTestId === true) {
+                answer_option = '';
             }
 
             if (userTestId && questionId) {
@@ -85,6 +92,7 @@
                     }) => {
                         if (status) {
                             $dataContainer.append(html);
+                            startTimer();
                         }
                     })
                     .catch(function(error) {
@@ -111,6 +119,7 @@
         });
 
         function handleError(error) {
+            clearTimer();
             console.log(error);
         }
 
@@ -124,11 +133,65 @@
                 }) => {
                     if (status) {
                         $dataContainer.append(html);
+                        startTimer();
                     }
                 })
                 .catch(function(error) {
                     handleError(error);
                 });
+        }
+
+        function startTimer() {
+
+            clearTimer();
+
+            const $actable = $dataContainer.find(".save-and-next");
+
+            if ($actable.length == 1) {
+                timer = getTimer(function() {
+                    $actable.trigger('click', true);
+                });
+            }
+        }
+
+        function clearTimer() {
+            if (timer) {
+                clearInterval(timer);
+            }
+        }
+
+        function getTimer(cb) {
+
+            const $questionTime = $dataContainer.find('.question-time');
+            let seconds = 0;
+
+            return setInterval(function() {
+                seconds++;
+
+                if ($questionTime.length == 1) {
+                    $questionTime.html(formatTime(seconds));
+
+                    if (seconds > timerInterval - 10) {
+                        $questionTime.parent().addClass('text-danger');
+                    }
+                }
+
+                if (seconds == timerInterval) {
+                    seconds = 0;
+                    cb();
+                }
+
+            }, 1000); //miliseconds
+        }
+
+        function formatTime(seconds) {
+            if (typeof seconds === 'undefined' || seconds <= 0) {
+                return "00:00";
+            }
+
+            const effectiveSeconds = seconds % 60,
+                effectiveMinutes = (seconds - effectiveSeconds) / 60;
+            return `${`0${effectiveMinutes}`.slice(-2)}:${`0${effectiveSeconds}`.slice(-2)}`;
         }
     });
 </script>

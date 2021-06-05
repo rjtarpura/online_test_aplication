@@ -58,7 +58,7 @@ class User extends Authenticatable
      */
     public function tests()
     {
-        return $this->hasMany(UserTest::class)->latest();
+        return $this->hasMany(UserTest::class)->completed()->latest();
     }
 
     /**

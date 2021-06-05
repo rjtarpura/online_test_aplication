@@ -229,4 +229,6 @@ return [
 
     ],
 
+    'passing_percentage'        =>  env('PASSING_PERCENTAGE', 120),
+    'question_timer_seconds'    =>  env('QUESTION_TIMER_SECONDS', 120),
 ];

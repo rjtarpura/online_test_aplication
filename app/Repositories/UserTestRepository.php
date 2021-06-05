@@ -48,6 +48,9 @@ class UserTestRepository
             return $this->generateHtml($activeTest);
         }
 
+        $questionsCount = Question::count();
+        $duration = config('app.question_timer_seconds', 120);
+
         return "<div class='widget-box ui-sortable-handle'>
                     <div class='widget-header'>
                         <h5 class='widget-title'>Start Test !!</h5>
@@ -61,6 +64,14 @@ class UserTestRepository
                                         Hey !!
                                     </strong>
                                     You can start a new test !!
+                                </p>
+
+                                <p>
+                                    <strong>
+                                        Please Note: 
+                                    </strong>
+                                    <p>There are total {$questionsCount} questions and duration of each question is {$duration} seconds. After that the question will be auto submitted.</p>
+                                    <p>Please don't refresh or navigate to other page, as it will cancel you test.</p>
                                 </p>
 
                                 <p>
@@ -85,7 +96,7 @@ class UserTestRepository
 
         try {
             $userTest->userTestSheets()->create(array_merge($input, [
-                'is_correct'    => ($question->correct_answer == $input['answer_option']) ? true : false,
+                'is_correct'    => (isset($input['answer_option']) && $question->correct_answer == $input['answer_option']) ? true : false,
             ]));
 
             $questionsCount = Question::count();
@@ -93,16 +104,17 @@ class UserTestRepository
 
             if ($questionsCount == $attemptedQuestionsCount) {
 
-                $passingPercentage = env('PASSING_PERCENTAGE', 70) / 100;
+                $passingPercentage = config('app.passing_percentage', 70) / 100;
                 $correctQuestionsCount = $userTest->userTestSheets()->correctAnswers()->count();
                 $inCorrectQuestionsCount = $userTest->userTestSheets()->inCorrectAnswers()->count();
-                $userPercentage = $correctQuestionsCount / $attemptedQuestionsCount;
+                $userPercentage = ($attemptedQuestionsCount == 0) ? 0 : $correctQuestionsCount / $attemptedQuestionsCount;
 
                 $userTest->update([
-                    'end_at'                    => now(),
+                    'end_at'                    =>  now(),
                     'total_correct_questions'   =>  $correctQuestionsCount,
                     'total_incorrect_questions' =>  $inCorrectQuestionsCount,
                     'is_passed'                 =>  $userPercentage >= $passingPercentage,
+                    'is_auto_stop'              =>  false,
                 ]);
             }
 
@@ -128,7 +140,7 @@ class UserTestRepository
         if ($questionsCount == $attemptedQuestionsCount) {
             // return result response
 
-            $passingPercentage = env('PASSING_PERCENTAGE', 70) / 100;
+            $passingPercentage = config('app.passing_percentage', 70) / 100;
             $correctQuestionsCount = $userTest->userTestSheets()->correctAnswers()->count();
             $userPercentage = $correctQuestionsCount / $attemptedQuestionsCount;
 
@@ -182,7 +194,8 @@ class UserTestRepository
             return "<div class='widget-box ui-sortable-handle'>
                     <div class='widget-header'>
                         <h5 class='widget-title'>Question #{$attemptedQuestionsCount}/{$questionsCount}</h5>
-                    </div>
+                        <div class='widget-toolbar'><span class='question-time'>00:00</span>/" . gmdate("i:s", config('app.question_timer_seconds', 120)) . "</div>
+                    </div>                    
                     <div class='widget-body'>
                         <form>
                             <div class='widget-main'>
@@ -249,5 +262,39 @@ class UserTestRepository
                 return false;
             }
         }
+    }
+
+    /**
+     * Stop active test
+     */
+    public function stopActiveTest()
+    {
+        $userTest = Auth::user()->activeTest;
+
+        if ($userTest instanceof UserTest) {
+
+            try {
+
+                $attemptedQuestionsCount = $userTest->userTestSheets->count();
+                $passingPercentage = config('app.passing_percentage', 70) / 100;
+                $correctQuestionsCount = $userTest->userTestSheets()->correctAnswers()->count();
+                $inCorrectQuestionsCount = $userTest->userTestSheets()->inCorrectAnswers()->count();
+                $userPercentage = ($attemptedQuestionsCount == 0) ? 0 : $correctQuestionsCount / $attemptedQuestionsCount;
+
+                $userTest->update([
+                    'end_at'                    => now(),
+                    'total_correct_questions'   =>  $correctQuestionsCount,
+                    'total_incorrect_questions' =>  $inCorrectQuestionsCount,
+                    'is_passed'                 =>  $userPercentage >= $passingPercentage,
+                    'is_auto_stop'                 =>  true,
+                ]);
+
+                return true;
+            } catch (Exception $e) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
