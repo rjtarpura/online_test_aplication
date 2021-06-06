@@ -1,0 +1,175 @@
+{
+	"info": {
+		"_postman_id": "6b8d463d-fafb-4a92-9cc8-d9ea315674f5",
+		"name": "TechnoStackAPI",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "email",
+							"value": "user1@user.com",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "password",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/login",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Questions",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{BASE_URL}}/test/get-questions",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"test",
+						"get-questions"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Save Test Result",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "question_id[0]",
+							"value": "1",
+							"type": "text"
+						},
+						{
+							"key": "question_id[1]",
+							"value": "2",
+							"type": "text"
+						},
+						{
+							"key": "answer_option[0]",
+							"value": "option_a",
+							"type": "text"
+						},
+						{
+							"key": "answer_option[1]",
+							"value": "option_b",
+							"type": "text"
+						},
+						{
+							"key": "time_taken[0]",
+							"value": "45",
+							"type": "text"
+						},
+						{
+							"key": "time_taken[1]",
+							"value": "60",
+							"type": "text"
+						},
+						{
+							"key": "start_at",
+							"value": "2021-05-01 10:20:15",
+							"type": "text"
+						},
+						{
+							"key": "end_at",
+							"value": "2021-05-01 10:22:00",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/test/save-result",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"test",
+						"save-result"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Logout",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{BASE_URL}}/logout",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"logout"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIxIiwianRpIjoiNzEzOTIwMGYxYzQ4NmM4MzQzOTJiMmM1ZjVkNzIwNzEzNTU1ZDU1NTU2Y2YwODEzMjhlMjZjNDc0NDNhZWUxNThmNTM3Y2NhY2EzYWFkZjMiLCJpYXQiOjE2MjI5ODU0NzQsIm5iZiI6MTYyMjk4NTQ3NCwiZXhwIjoxNjU0NTIxNDc0LCJzdWIiOiI2Iiwic2NvcGVzIjpbXX0.tNI_OWex9uEr10ENxoDoreJfB-1Ks1O0jBtXj2r5Ji9DBK_Q_GbnAet7O-ad-9dv10wfVIhPQKW5Me1OyQEvyI1Im3ovm20Sl_nO4kpdISYrKQyGvf7XgjdjaV61aWJSYzbAVGv34gy0Ozf7ruIb_witWUi4dhFSWuAfYeD9F0P5nFI3yaFzGjDUf0Z7mmEVIxEZN3II_0lpUyqlsw-syIzsEcO_nv4r6hYHTG87c71VNTXgPQFC0WWtOLPGXpjx3CSJcvlVT3ANa9mW7nQwBmfQ0DcxvANX1ICP7sD2cFz3oqf8RzFHPyUFiJ-20UwkcFuYjG7yY6Uv08DewMHJWrhO3eDIWbnoFHQVXsnHvTgm-yBox7ioVmr8XGDJPVZJTuN1trXJtptlvTWwjA9KzbuxdKRyyjPnpJUHfshPkAl8UnW1P5YEg5_AZRTr6cIjOvlfKP_3cDbBFw9Src545qZ_NrIhVS7to8CJX4Rwty7aQVlYYxTXRquwfGSY-PmWwvTsGrG1uBQle22t7DwTaWz772z7cRM1-ATBYMWJH5o5ir_gktra7UoOOxRHGkiZaVZwnZhACVmr0UWbNEEy_EbiTkH7nnpkBKAV99HilEC5jCq_Ir1YFLZUQQZeMULc-TZNZ5zkZaX_UNS6gQDartCjVzmY3z4BW1oqQIgrtKY",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "BASE_URL",
+			"value": ""
+		}
+	]
+}

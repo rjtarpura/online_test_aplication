@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Events\TestCompleted;
 use App\Exceptions\GeneralException;
 use App\Question;
 use App\UserTest;
@@ -140,23 +141,25 @@ class UserTestRepository
 
                 $passingPercentage = config('app.passing_percentage', 70) / 100;
 
-                $userTestData = [
+                $userTest->update([
                     'end_at'                =>  now(),
                     'questions_attempted'   =>  $correctQuestionsCount + $inCorrectQuestionsCount,
                     'correct_answers'       =>  $correctQuestionsCount,
                     'incorrect_answers'     =>  $inCorrectQuestionsCount,
                     'is_passed'             =>  $userPercentage >= $passingPercentage,
                     'is_auto_stop'          =>  false,
-                ];
+                ]);
+
+                $userTest->refresh();
+
+                event(new TestCompleted($userTest));
             } else {
-                $userTestData = [
+                $userTest->update([
                     'questions_attempted'   =>  $correctQuestionsCount + $inCorrectQuestionsCount,
                     'correct_answers'       =>  $correctQuestionsCount,
                     'incorrect_answers'     =>  $inCorrectQuestionsCount,
-                ];
+                ]);
             }
-
-            $userTest->update($userTestData);
 
             return $this->generateHtml($userTest);
         } catch (Exception $e) {
@@ -215,6 +218,7 @@ class UserTestRepository
                                     <p>Your Socre is: {$correctQuestionsCount}/{$questionsCount}</p>
                                     <p>Total Time: " . gmdate("i:s", $timeTaken) . "</p>
 
+                                    <p>You'll also recieve an email of the result</p>
                                     <p>
                                         <a href='" . route('home') . "' class='btn btn-sm {$btnClass}'>Go to Home</a>
                                     </p>
@@ -399,6 +403,8 @@ class UserTestRepository
             ]);
 
             $userTest->refresh();
+
+            event(new TestCompleted($userTest));
 
             return [
                 'questions_attempted'   =>  $userTest->questions_attempted,
