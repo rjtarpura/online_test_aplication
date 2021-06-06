@@ -66,12 +66,13 @@ class QuestionController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param  \App\Question  $question
+     * @param  \App\Http\Requests\Question\QuestionManageRequest  $request
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Question $question, QuestionManageRequest $request)
     {
-        //
+        return view('question.show')->withQuestion($question);
     }
 
     /**

@@ -50,18 +50,19 @@
                     <h4 class="panel-title">
                         <a class="accordion-toggle collapsed" data-toggle="collapse" href="#collapse-{{ $loop->iteration }}" aria-expanded="false">
                             <i class="bigger-110 ace-icon fa fa-angle-right" data-icon-hide="ace-icon fa fa-angle-down" data-icon-show="ace-icon fa fa-angle-right"></i>
-                            &nbsp;Test #{{ $loop->remaining + 1 }}
-                            @if($userTest->end_at)
-                            : ({{ $userTest->end_at->format('Y-m-d') }})
+                            &nbsp;Test #{{ $loop->remaining + 1 }} : ({{ $userTest->start_at->format('Y-m-d') }})
 
-                            @if($userTest->isPassd())
-                            <span class="label label-sm label-success pull-right">Passed</span>
-                            @else
-                            <span class="label label-sm label-warning pull-right">Failer</span>
-                            @endif
-                            @else
-                            <span class="label label-sm label-inverse arrowed-in pull-right">Ongoing {{$userTest->userTestSheets->count()}} / {{$totalQuestions}}</span>
-                            @endif
+                            <p class="pull-right">
+                                @if($userTest->isPassed())
+                                <span class="label label-sm arrowed-in label-success">Passed</span>
+                                <span class="label label-sm arrowed-in-right label-info"><i class="ace-icon fa fa-clock-o"></i> {{ gmdate("i:s", $userTest->userTestSheets->sum('time_taken')) }}</span>
+                                @elseif($userTest->isFailed())
+                                <span class="label label-sm arrowed-in label-danger">Failed</span>
+                                <span class="label label-sm arrowed-in-right label-info"><i class="ace-icon fa fa-clock-o"></i> {{ gmdate("i:s", $userTest->userTestSheets->sum('time_taken')) }}</span>
+                                @elseif(!$userTest->end_at)
+                                <span class="label label-sm label-inverse arrowed-in">Ongoing {{$userTest->userTestSheets->count()}} / {{$totalQuestions}}</span>
+                                @endif
+                            </p>
                         </a>
                     </h4>
                 </div>
@@ -84,14 +85,25 @@
 
                         <p class="text-primary">Question#{{ $index+1 }}: {{ $testSheet->question->question }}</p>
 
-                        <p class="options text-muted">Option A: {{ $testSheet->question->option_a }}</p>
-                        <p class="options text-muted">Option B: {{ $testSheet->question->option_b }}</p>
-                        <p class="options text-muted">Option C: {{ $testSheet->question->option_c }}</p>
-                        <p class="options text-muted">Option D: {{ $testSheet->question->option_d }}</p>
+                        <p class="options text-muted @if($testSheet->question->correct_answer == 'option_a') text-success @endif">Option A: {{ $testSheet->question->option_a }}</p>
+                        <p class="options text-muted @if($testSheet->question->correct_answer == 'option_b') text-success @endif">Option B: {{ $testSheet->question->option_b }}</p>
+                        <p class="options text-muted @if($testSheet->question->correct_answer == 'option_c') text-success @endif">Option C: {{ $testSheet->question->option_c }}</p>
+                        <p class="options text-muted @if($testSheet->question->correct_answer == 'option_d') text-success @endif">Option D: {{ $testSheet->question->option_d }}</p>
 
                         <p class="text-right">
-                            <span class="label label-sm label-inverse arrowed-in">Correct Choice: {{$testSheet->question->correct_answer}}</span>
-                            <span class="label label-sm @if($testSheet->is_correct) label-success @else label-warning @endif">Your Choice: @if($testSheet->answer_option) {{$testSheet->answer_option}} @else Auto Submit @endif</span>
+                            <span class="label label-inverse arrowed-in">Correct Option: {{strtoupper(substr($testSheet->question->correct_answer,-1))}}</span>
+
+                            @if($testSheet->answer_option)
+                            @if($testSheet->is_correct)
+                            <span class="label label-success"><i class="ace-icon fa fa-check"></i> Your Answer: {{strtoupper(substr($testSheet->answer_option,-1))}}</span>
+                            @else
+                            <span class="label label-danger"><i class="ace-icon fa fa-times"></i> Your Answer: {{strtoupper(substr($testSheet->answer_option,-1))}}</span>
+                            @endif
+                            @else
+                            <span class="label label-default" title="Time Taken">Auto Submit</span>
+                            @endif
+
+                            <span class="label arrowed-in-right label-info" title="Time Taken"><i class="ace-icon fa fa-clock-o"></i> {{$testSheet->time_taken_formated}}</span>
                         </p>
                         <hr />
                         @endforeach

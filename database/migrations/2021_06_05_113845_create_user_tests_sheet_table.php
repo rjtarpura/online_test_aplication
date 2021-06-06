@@ -19,8 +19,9 @@ class CreateUserTestsSheetTable extends Migration
             $table->unsignedBigInteger('question_id');
             $table->string('answer_option')->nullable();
             $table->boolean('is_correct');
+            $table->integer('time_taken')->comment('seconds');
             $table->timestamps();
-            // $table->softDeletes();
+            $table->softDeletes();
 
             $table->foreign('user_test_id')->on('user_tests')->references('id');
             $table->foreign('question_id')->on('questions')->references('id');

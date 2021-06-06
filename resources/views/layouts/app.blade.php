@@ -125,7 +125,7 @@
                     <b class="arrow"></b>
 
                     <ul class="submenu">
-                        <li class="@if(Route::is('questions.index') || Route::is('questions.edit')) active @endif">
+                        <li class="@if(Route::is('questions.index') || Route::is('questions.edit') || Route::is('questions.show')) active @endif">
                             <a href="{{ route('questions.index') }}">
                                 <i class="menu-icon fa fa-caret-right"></i>
                                 Question List
@@ -143,6 +143,15 @@
                             <b class="arrow"></b>
                         </li>
                     </ul>
+                </li>
+
+                <li class="@if(Route::is('user-tests.*')) active @endif">
+                    <a href="{{ route('user-tests.manage') }}">
+                        <i class="menu-icon fa fa-pencil-square-o"></i>
+                        <span class="menu-text"> Tests </span>
+                    </a>
+
+                    <b class="arrow"></b>
                 </li>
                 @endif
             </ul><!-- /.nav-list -->

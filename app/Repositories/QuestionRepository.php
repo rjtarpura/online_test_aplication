@@ -7,7 +7,6 @@ use Exception;
 
 class QuestionRepository
 {
-
     /**
      * Get data for datatable
      * 
@@ -16,14 +15,14 @@ class QuestionRepository
     public function getTable()
     {
         $query = Question::select([
-            'id',
-            'question',
-            'option_a',
-            'option_b',
-            'option_c',
-            'option_d',
-            'created_at',
-            'updated_at',
+            'questions.id',
+            'questions.question',
+            'questions.option_a',
+            'questions.option_b',
+            'questions.option_c',
+            'questions.option_d',
+            'questions.created_at',
+            'questions.updated_at',
         ]);
 
         return $query;

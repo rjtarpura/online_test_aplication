@@ -16,10 +16,11 @@ class CreateUserTestsTable extends Migration
         Schema::create('user_tests', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
+            $table->integer('questions_attempted')->nullable();
+            $table->integer('correct_answers')->nullable();
+            $table->integer('incorrect_answers')->nullable();
             $table->timestamp('start_at');
             $table->timestamp('end_at')->nullable();
-            $table->integer('total_correct_questions')->nullable();
-            $table->integer('total_incorrect_questions')->nullable();
             $table->boolean('is_passed')->nullable();
             $table->boolean('is_auto_stop')->nullable();
             $table->timestamps();

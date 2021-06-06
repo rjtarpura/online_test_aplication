@@ -18,10 +18,11 @@ class UserTest extends Model
 
     protected $fillable = [
         'user_id',
+        'questions_attempted',
+        'correct_answers',
+        'incorrect_answers',
         'start_at',
         'end_at',
-        'total_correct_questions',
-        'total_incorrect_questions',
         'is_passed',
         'is_auto_stop',
     ];
@@ -55,8 +56,26 @@ class UserTest extends Model
         return $this->hasMany(UserTestSheet::class);
     }
 
-    public function isPassd()
+    public function user()
     {
+        return $this->belongsTo(User::class);
+    }
+
+    public function isPassed()
+    {
+        if (is_null($this->is_passed)) {
+            return 0;
+        }
+        
         return ($this->is_passed) ? 1 : 0;
+    }
+
+    public function isFailed()
+    {
+        if (is_null($this->is_passed)) {
+            return 0;
+        }
+
+        return !$this->isPassed();
     }
 }

@@ -9,6 +9,28 @@ use Illuminate\Support\Facades\Auth;
 
 class UserTestRepository
 {
+    /**
+     * Get data for datatable
+     * 
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function getTable()
+    {
+        $query = UserTest::select([
+            'user_tests.id',
+            'user_tests.questions_attempted',
+            'user_tests.correct_answers',
+            'user_tests.incorrect_answers',
+            'user_tests.is_passed',
+            'user_tests.is_auto_stop',
+            'users.name as candidate_name',
+            'user_tests.start_at',
+            'user_tests.end_at',
+        ])
+            ->leftJoin('users', 'users.id', '=', 'user_tests.user_id');
+
+        return $query;
+    }
 
     /**
      * load initial data
@@ -93,30 +115,47 @@ class UserTestRepository
     {
         $html = "";
         $question = Question::findOrFail($input['question_id']);
+        $timeTaken = config('app.question_timer_seconds', 120);
+
+        if (session()->has('question_start_time')) {
+            $startTime = session()->pull('question_start_time');
+            $timeTaken = now()->diffInSeconds($startTime);
+        }
 
         try {
             $userTest->userTestSheets()->create(array_merge($input, [
                 'is_correct'    => (isset($input['answer_option']) && $question->correct_answer == $input['answer_option']) ? true : false,
+                'time_taken'    => $timeTaken,
             ]));
 
             $questionsCount = Question::count();
             $attemptedQuestionsCount = $userTest->userTestSheets->count();
 
+            $correctQuestionsCount = $userTest->userTestSheets()->correctAnswers()->count();
+            $inCorrectQuestionsCount = $userTest->userTestSheets()->inCorrectAnswers()->count();
+            $userPercentage = ($attemptedQuestionsCount == 0) ? 0 : $correctQuestionsCount / $attemptedQuestionsCount;
+
             if ($questionsCount == $attemptedQuestionsCount) {
 
                 $passingPercentage = config('app.passing_percentage', 70) / 100;
-                $correctQuestionsCount = $userTest->userTestSheets()->correctAnswers()->count();
-                $inCorrectQuestionsCount = $userTest->userTestSheets()->inCorrectAnswers()->count();
-                $userPercentage = ($attemptedQuestionsCount == 0) ? 0 : $correctQuestionsCount / $attemptedQuestionsCount;
 
-                $userTest->update([
-                    'end_at'                    =>  now(),
-                    'total_correct_questions'   =>  $correctQuestionsCount,
-                    'total_incorrect_questions' =>  $inCorrectQuestionsCount,
-                    'is_passed'                 =>  $userPercentage >= $passingPercentage,
-                    'is_auto_stop'              =>  false,
-                ]);
+                $userTestData = [
+                    'end_at'                =>  now(),
+                    'questions_attempted'   =>  $correctQuestionsCount + $inCorrectQuestionsCount,
+                    'correct_answers'       =>  $correctQuestionsCount,
+                    'incorrect_answers'     =>  $inCorrectQuestionsCount,
+                    'is_passed'             =>  $userPercentage >= $passingPercentage,
+                    'is_auto_stop'          =>  false,
+                ];
+            } else {
+                $userTestData = [
+                    'questions_attempted'   =>  $correctQuestionsCount + $inCorrectQuestionsCount,
+                    'correct_answers'       =>  $correctQuestionsCount,
+                    'incorrect_answers'     =>  $inCorrectQuestionsCount,
+                ];
             }
+
+            $userTest->update($userTestData);
 
             return $this->generateHtml($userTest);
         } catch (Exception $e) {
@@ -143,6 +182,7 @@ class UserTestRepository
             $passingPercentage = config('app.passing_percentage', 70) / 100;
             $correctQuestionsCount = $userTest->userTestSheets()->correctAnswers()->count();
             $userPercentage = $correctQuestionsCount / $attemptedQuestionsCount;
+            $timeTaken = $attemptedQuestions->sum('time_taken');
 
             $className = "alert-danger";
             $title = "Alsa!";
@@ -171,9 +211,8 @@ class UserTestRepository
                                         {$message}
                                     </p>
 
-                                    <p>
-                                        Your Socre is: {$correctQuestionsCount}/{$questionsCount}
-                                    </p>
+                                    <p>Your Socre is: {$correctQuestionsCount}/{$questionsCount}</p>
+                                    <p>Total Time: " . gmdate("i:s", $timeTaken) . "</p>
 
                                     <p>
                                         <a href='" . route('home') . "' class='btn btn-sm {$btnClass}'>Go to Home</a>
@@ -186,10 +225,29 @@ class UserTestRepository
 
             // return question response
 
+            // Put question start time in session
+            session()->put('question_start_time', now());
+
             $attemptedQuestionsIds = $attemptedQuestions->pluck('question_id')->toArray();
             $nextQuestion = Question::inRandomOrder()->whereNotIn('id', $attemptedQuestionsIds)->first();
             $buttonText = ($attemptedQuestionsCount == $questionsCount - 1) ? "Finish" : "Next <i class='ace-icon fa fa-arrow-right icon-on-right'></i>";
             $attemptedQuestionsCount++;
+
+            $optionsArray = ['a', 'b', 'c', 'd'];
+            shuffle($optionsArray);
+            $choices = "";
+
+            foreach ($optionsArray as $alpha) {
+
+                $optionText = $nextQuestion->{"option_" . $alpha};
+
+                $choices .= "<div class='radio'>
+                                <label>
+                                    <input name='user_choice' type='radio' class='ace' value='option_{$alpha}'>
+                                    <span class='lbl'> {$optionText}</span>
+                                </label>
+                            </div>";
+            };
 
             return "<div class='widget-box ui-sortable-handle'>
                     <div class='widget-header'>
@@ -202,33 +260,7 @@ class UserTestRepository
                                 <p class='alert alert-info'>{$nextQuestion->question}</p>
                 
                                 <div class='control-group'>
-                                    <div class='radio'>
-                                        <label>
-                                            <input type='radio' class='ace' value='option_a'>
-                                            <span class='lbl'> {$nextQuestion->option_a}</span>
-                                        </label>
-                                    </div>
-                
-                                    <div class='radio'>
-                                        <label>
-                                            <input type='radio' class='ace' value='option_b'>
-                                            <span class='lbl'> {$nextQuestion->option_b}</span>
-                                        </label>
-                                    </div>
-
-                                    <div class='radio'>
-                                        <label>
-                                            <input type='radio' class='ace' value='option_c'>
-                                            <span class='lbl'> {$nextQuestion->option_c}</span>
-                                        </label>
-                                    </div>
-
-                                    <div class='radio'>
-                                        <label>
-                                            <input type='radio' class='ace' value='option_d'>
-                                            <span class='lbl'> {$nextQuestion->option_d}</span>
-                                        </label>
-                                    </div>
+                                    {$choices}
                                 </div>
                             </div>
                             <div class='widget-toolbox padding-8 clearfix'>
@@ -282,11 +314,12 @@ class UserTestRepository
                 $userPercentage = ($attemptedQuestionsCount == 0) ? 0 : $correctQuestionsCount / $attemptedQuestionsCount;
 
                 $userTest->update([
-                    'end_at'                    => now(),
-                    'total_correct_questions'   =>  $correctQuestionsCount,
-                    'total_incorrect_questions' =>  $inCorrectQuestionsCount,
-                    'is_passed'                 =>  $userPercentage >= $passingPercentage,
-                    'is_auto_stop'                 =>  true,
+                    'end_at'                => now(),
+                    'questions_attempted'   =>  $correctQuestionsCount + $inCorrectQuestionsCount,
+                    'correct_answers'       =>  $correctQuestionsCount,
+                    'incorrect_answers'     =>  $inCorrectQuestionsCount,
+                    'is_passed'             =>  $userPercentage >= $passingPercentage,
+                    'is_auto_stop'          =>  true,
                 ]);
 
                 return true;

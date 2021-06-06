@@ -55,6 +55,7 @@
     $(document).ready(function() {
 
         const editUrl = "{{ route('questions.edit', ['question' => ':id']) }}",
+            viewUrl = "{{ route('questions.show', ['question' => ':id']) }}",
             destroyUrl = "{{ route('questions.destroy', ['question' => ':id']) }}",
             csrfToken = $("meta[name='csrf-token']").attr('content');
 
@@ -90,7 +91,7 @@
                     sortable: false,
                     "render": function(id, type, row) {
                         return `<div class="action-buttons">
-                                    <a class="blue" href="javascript:void(0);">
+                                    <a class="blue" href="${viewUrl.replace(':id', id)}">
                                         <i class="ace-icon fa fa-search-plus bigger-130"></i>
                                     </a>
 

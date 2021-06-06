@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class UserTestSheet extends Model
 {
-    // use SoftDeletes;
+    use SoftDeletes;
 
     protected $table = "user_tests_sheet";
 
@@ -16,6 +16,11 @@ class UserTestSheet extends Model
         'question_id',
         'answer_option',
         'is_correct',
+        'time_taken',
+    ];
+
+    protected $appends = [
+        'time_taken_formated',
     ];
 
     public function scopeCorrectAnswers($query) {
@@ -28,5 +33,9 @@ class UserTestSheet extends Model
 
     public function question() {
         return $this->belongsTo(Question::class);
+    }
+
+    public function getTimeTakenFormatedAttribute($value) {
+        return ($this->time_taken > 0) ? gmdate("i:s", $this->time_taken) : '00:00';
     }
 }
