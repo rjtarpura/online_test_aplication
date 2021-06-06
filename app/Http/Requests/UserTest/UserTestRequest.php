@@ -14,7 +14,9 @@ class UserTestRequest extends FormRequest
      */
     public function authorize()
     {
-        return Auth::user()->isNotAdmin();
+        $userTestCount = Auth::user()->tests()->count();
+
+        return Auth::user()->isNotAdmin() && $userTestCount == 0;
     }
 
     /**

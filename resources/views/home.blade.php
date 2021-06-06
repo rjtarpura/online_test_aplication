@@ -30,6 +30,8 @@
     </div>
 </div>
 @else
+
+@if($userTests->count() == 0)
 <div class="alert alert-info">
     <strong>Heads up!</strong>
 
@@ -40,6 +42,7 @@
         <a href="{{ route('user-tests.index') }}" class="btn btn-sm btn-info">Start Test</a>
     </p>
 </div>
+@endif
 
 <div class="row">
     <div class="col-xs-12">
