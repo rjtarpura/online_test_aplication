@@ -14,6 +14,19 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
+Route::group(['namespace' => 'API\V1', 'prefix' => 'v1', 'as' => 'api.v1.'], function () {
+
+    Route::group(['middleware' => ['guest']], function () {
+
+        Route::post('login', 'AuthController@login')->name('login');
+    });
+
+    Route::group(['middleware' => ['auth:api']], function () {
+
+        Route::post('logout', 'AuthController@logout')->name('logout');
+
+        // Test APIs
+        Route::get('test/get-questions', 'TestApiController@getQuestions')->name('test.get-questions');
+        Route::post('test/save-result', 'TestApiController@saveResult')->name('test.save-result');
+    });
 });

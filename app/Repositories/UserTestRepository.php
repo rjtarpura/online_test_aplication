@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Exceptions\GeneralException;
 use App\Question;
 use App\UserTest;
 use Exception;
@@ -329,5 +330,85 @@ class UserTestRepository
         }
 
         return true;
+    }
+
+    /**
+     * Store Test Data : API
+     */
+    public function storeTestData($input)
+    {
+        $userTest = Auth::user()->activeTest;
+
+        try {
+
+            if ($userTest instanceof UserTest) {
+
+                // Stop active test
+                $attemptedQuestionsCount = $userTest->userTestSheets->count();
+                $passingPercentage = config('app.passing_percentage', 70) / 100;
+                $correctQuestionsCount = $userTest->userTestSheets()->correctAnswers()->count();
+                $inCorrectQuestionsCount = $userTest->userTestSheets()->inCorrectAnswers()->count();
+                $userPercentage = ($attemptedQuestionsCount == 0) ? 0 : $correctQuestionsCount / $attemptedQuestionsCount;
+
+                $userTest->update([
+                    'end_at'                => now(),
+                    'questions_attempted'   =>  $correctQuestionsCount + $inCorrectQuestionsCount,
+                    'correct_answers'       =>  $correctQuestionsCount,
+                    'incorrect_answers'     =>  $inCorrectQuestionsCount,
+                    'is_passed'             =>  $userPercentage >= $passingPercentage,
+                    'is_auto_stop'          =>  true,
+                ]);
+            }
+
+            $userTest = Auth::user()->tests()->create([
+                'start_at'  => $input['start_at'],
+            ]);
+
+            $userTestSheetData = [];
+
+            foreach ($input['question_id'] as  $k => $question_id) {
+
+                $question = Question::findOrFail($question_id);
+
+                $answer_option = $input['answer_option'][$k] ?? null;
+                $time_taken = $input['time_taken'][$k] ?? null;
+
+                $userTestSheetData[] = [
+                    'question_id'   =>  $question_id,
+                    'answer_option' =>  $answer_option,
+                    'is_correct'    => ($question->correct_answer == $answer_option) ? true : false,
+                    'time_taken'    =>  $time_taken,
+                ];
+            }
+
+            $userTest->userTestSheets()->createMany($userTestSheetData);
+
+            $attemptedQuestionsCount = $userTest->userTestSheets->count();
+            $passingPercentage = config('app.passing_percentage', 70) / 100;
+            $correctQuestionsCount = $userTest->userTestSheets()->correctAnswers()->count();
+            $inCorrectQuestionsCount = $userTest->userTestSheets()->inCorrectAnswers()->count();
+            $userPercentage = ($attemptedQuestionsCount == 0) ? 0 : $correctQuestionsCount / $attemptedQuestionsCount;
+
+            $userTest->update([
+                'end_at'                =>  $input['end_at'],
+                'questions_attempted'   =>  $correctQuestionsCount + $inCorrectQuestionsCount,
+                'correct_answers'       =>  $correctQuestionsCount,
+                'incorrect_answers'     =>  $inCorrectQuestionsCount,
+                'is_passed'             =>  $userPercentage >= $passingPercentage,
+                'is_auto_stop'          =>  false,
+            ]);
+
+            $userTest->refresh();
+
+            return [
+                'questions_attempted'   =>  $userTest->questions_attempted,
+                'correct_answers'       =>  $userTest->correct_answers,
+                'incorrect_answers'     =>  $userTest->incorrect_answers,
+                'is_passed'             =>  $userTest->is_passed,
+                'total_time_taken'      =>  $userTest->userTestSheets->sum('time_taken'),
+            ];
+        } catch (Exception $e) {
+            throw new GeneralException("Unable to store test data");
+        }
     }
 }
