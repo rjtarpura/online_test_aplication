@@ -19,7 +19,7 @@ class CreateUserTestsTable extends Migration
             $table->integer('questions_attempted')->nullable();
             $table->integer('correct_answers')->nullable();
             $table->integer('incorrect_answers')->nullable();
-            $table->timestamp('start_at');
+            $table->timestamp('start_at')->nullable();
             $table->timestamp('end_at')->nullable();
             $table->boolean('is_passed')->nullable();
             $table->boolean('is_auto_stop')->nullable();
